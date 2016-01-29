@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <link rel='stylesheet' href='../template/assets/css/fonts.googleapis.css'>
+        <link rel="stylesheet" href="../template/bower_components/angular-material/angular-material.css" />
+        <link rel="stylesheet" href="../template/assets/css/app.css" />
+        <link rel="stylesheet" href="css/experiment.css" />
+        <script src="../template/js/createjs-2013.12.12.min.js"></script>
+        <script src="../template/js/easeljs-0.7.0.min.js"></script>
+        <script src="../template/bower_components/angular/angular.min.js"></script>
+        <script src="../template/bower_components/angular-animate/angular-animate.js"></script>
+        <script src="../template/bower_components/angular-aria/angular-aria.js"></script>
+        <script src="../template/bower_components/angular-fullscreen/angular-fullscreen.js"></script>
+        <script src="../template/js/Gettext.js"></script>
+        <script type="text/javascript" src="../template/bower_components/angular-material/angular-material.js"></script>
+        <script src="../template/js/getlanguage.js"></script>
+        <script src="./src/user_controller.js"></script>
+        <script src="./src/experiment.js"></script>
+        <script type="text/javascript">
+            angular
+                .module('starterApp', ['ngMaterial', 'users'])
+                .config(function($mdThemingProvider, $mdIconProvider) {
+                    $mdIconProvider
+                        .icon("menu", "../template/assets/svg/menu.svg", 24)
+                        .icon("fullscreen", "../template/assets/icons/Icon3.svg", 24)
+                        .icon("help", "../template/assets/icons/Icon2.svg", 24);
+                    $mdThemingProvider.theme('default')
+                        .primaryPalette('blue')
+                        .accentPalette('red');
+                });
+        </script>
+    </head>
+    <body style="background-color: #f2f2f2;" ng-app="starterApp" ng-controller="userController as ul">
+        <md-toolbar class="md-toolbar-tools" id="main">
+            <md-button class="md-icon-button" hide-gt-sm ng-click="ul.toggleList()" aria-label="Show User List">
+                <md-icon md-svg-icon="menu"></md-icon>
+            </md-button>
+            <!-- Experiment title -->
+            <h1 flex="" layout="row" class="expTitle" id="expTitle">{{heading}}</h1>
+            <md-button class="md-icon-button" aria-label="help" ng-click="showActionToast()">
+                <md-icon md-svg-icon="help"></md-icon>
+            </md-button>
+            <!-- Full screen -->
+            <md-button class="md-icon-button" aria-label="fullscreen" ng-click="goFullscreen()">
+                <md-icon md-svg-icon="fullscreen"></md-icon>
+            </md-button>
+        </md-toolbar>
+        <md-content flex layout="row" style="background-color: #f2f2f2;">
+            <md-content id="content" layout="column" style="background-color: #f2f2f2;" md-swipe-right="toggleSidenav()">
+                <canvas id="demoCanvas" width="700" height="700" align="center" layout-fill experiment></canvas>             
+                <div id="Copyright">{{copyright}}</div>
+            </md-content>
+            <md-sidenav class="site-sidenav md-sidenav-left" md-component-id="right" md-is-locked-open="$mdMedia('gt-sm')" md-swipe-left="toggleSidenav()">
+                <div>
+                    <md-button id="variables" class="md-raised md-primary toolbarbutton subTitle" ng-click="toggle1()">{{variables}}
+                        <span aria-hidden="true">
+                              <md-icon md-svg-src="md-toggle-arrow"  aria-hidden="true" ng-animate="{enter: 'rotate', leave: 'rotateCounterwise'}" ng-class="{true: 'rotate', false: 'rotateCounterwise'}[isActive1]" ></md-icon>
+                          </span>
+                    </md-button>
+                    <div ng-hide="showVariables" class="div">                        
+                        <!-- Telescope focus slider label -->
+                        <md-content class="md-title selectable" ng-show="focus_status">
+                            {{telescope_focus_label}} 
+                        </md-content> 
+                        <!-- Telescope focus slider -->
+                        <div layout ng-show="focus_status">
+                            <md-slider flex min="-15" max="15" aria-label="rating" ng-model="telescope_focus_model"  ng-change="focusTelescope();"></md-slider>
+                        </div>                                      
+                         <!--'Start' button   -->
+                        <section layout="row" layout-align="center center" ng-show="focus_status">
+                            <md-button class="md-raised" ng-click="startExperiment()" ng-disabled="start_disabled"> 
+                                {{start_btn_label}}
+                            </md-button>
+                        </section>
+                         <!--'Switch on/off button' button   -->
+                        <section layout="row" layout-align="center center" ng-hide="focus_status">
+                            <md-button class="md-raised" ng-click="switchOnOrOff()" >
+                                {{switch_btn_label}}
+                            </md-button>
+                        </section>
+                        <!--Slit focus slider label -->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{slit_focus_label}} 
+                        </md-content>
+                        <!-- Slit focus slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex min="-10" max="10" step="1" aria-label="rating" ng-model="slit_focus_model" aria-label="rating" ng-change="slitFocus();" ng-disabled="disabled_status" ></md-slider>
+                        </div> 
+                        <!-- Slit width slider label -->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{slit_width_label}} 
+                        </md-content>
+                        <!-- Slit width slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex min="0.1" max="0.5" step="0.05" ng-model="slit_width_model" aria-label="rating" ng-change="slitWidth();" ng-disabled="disabled_status"></md-slider>
+                        </div> 
+                        <!--'Place prism' button   -->
+                        <section layout="row" layout-align="center center" ng-hide="focus_status">
+                            <md-button class="md-raised" ng-click="placePrism();" ng-disabled="disabled_status">
+                                {{prism_btn_label}}
+                            </md-button>
+                        </section>
+                        <!-- Change angle label -->
+                        <div style="margin-bottom:15px;" ng-hide="focus_status">
+                            <md-content class="md-title selectable">
+                                {{change_angle_label}} 
+                            </md-content>
+                        </div>    
+                        <!-- Telescope slider label-->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{telescope_label}} {{telescope_model}}
+                        </md-content>
+                        <!-- Telescope slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex md-discrete min="-150" max="150" step="0.1" ng-model="telescope_model" aria-label="rating" ng-change="telescopeRotate();" ng-disabled="disabled_status"></md-slider>
+                        </div> 
+                        <!-- Vernier table slider label-->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{vernier_table_label}} {{vernier_model}}
+                        </md-content>                   
+                        <!-- Vernier table slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex md-discrete min="-180" max="180" step="0.1" ng-model="vernier_model" aria-label="rating" ng-change="verniertableRotate();" ng-disabled="disabled_status"></md-slider>
+                        </div> 
+                        <div style="margin-bottom:15px;" ng-hide="focus_status">
+                             <!-- Fine angle label -->
+                            <md-content class="md-title selectable">
+                                {{fine_angle_label}} 
+                            </md-content>
+                        </div>
+                        <!-- Telescope slider label-->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{telescope_label}} {{telescope_fine_model}}
+                        </md-content>
+                        <!-- Telescope slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex md-discrete min="-20" max="20" step="0.1" ng-model="telescope_fine_model" aria-label="rating" ng-change="telescopeFineRotate();" ng-disabled="disabled_status"></md-slider>
+                        </div> 
+                        <!-- Vernier table slider label-->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{vernier_table_label}} {{vernier_fine_model}}
+                        </md-content>
+                        <!-- Vernier table slider -->
+                        <div layout ng-hide="focus_status">
+                            <md-slider flex md-discrete min="-20" max="20" step="0.1" ng-model="vernier_fine_model" aria-label="rating" ng-change="verniertableFineRotate();" ng-disabled="disabled_status"></md-slider>
+                        </div>
+                        <!-- Vernier table slider label-->
+                        <md-content class="md-title selectable" ng-hide="focus_status">
+                            {{vernier_measurement_label}} 
+                        </md-content>          
+                        <!--  Reset button   -->
+                        <section layout="row" layout-align="center center">
+                            <md-button class="md-raised" id="reset" ng-click="resetFn();">
+                                {{reset}}
+                            </md-button>
+                        </section>
+                    </div>
+                    <md-button id="result" class="md-raised md-primary toolbarbutton subTitle" ng-click="toggle()">{{result}}
+                        <span aria-hidden="true">
+                                <md-icon md-svg-src="md-toggle-arrow"   aria-hidden="true" ng-animate="{enter: 'rotate', leave: 'rotateCounterwise'}" ng-class="{true: 'rotate', false: 'rotateCounterwise'}[isActive]" ></md-icon>
+                            </span>
+                    </md-button>
+                    <div class="div" ng-show="showValue">                       
+                    </div>
+                </div>
+            </md-sidenav>
+        </md-content>
+    </body>
+</html>
